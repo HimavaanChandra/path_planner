@@ -189,74 +189,17 @@ void ASTAR::init_heuristic(Node goal_node) {
   // initialise heuristic value for each grid in the map
 
   // YOUR CODE GOES HERE
-  //Remember top left is 0,0 so will have to modify---------------
-  // for (int i=0;i<gridmap_.size();i++)
-  // {
-  //   for (int j=0;j<gridmap_[j].size();j++)
-  //   {
-  //     // start_node
-  //     // goal_node
-  //     gridmap_[i][j].heuristic= 0;
-  //   }
-  // }
-
-//Start at goal node?
-  //Record goal x,y
-  //Spread row then column
-  
-  //While up = y-1 is available y>=0
-    //while left = x-1 is available
-      //current value + 1
-    //while right = x+1 is available
-      //current value + 1
-
-  //While down = y+1 is available y<=gridmap bottom
-    //while left = x-1 is available
-      //current value + 1
-    //while right = x+1 is available
-      //current value + 1
-//Print gridmap for testing
-
-  //Going up
-  
-  for (int i=goal_node.y;i>=0;i--)
+  //Proper way to do it, Get x and y position and find difference -- edit comment-----------------------------
+  for (int i=0;i<gridmap_.size();i++)
   {
-    for (int j=goal_node.x;j>=0;j--)
+    for (int j=0; j<gridmap_[i].size();j++)
     {
-      if (i!=goal_node.y && j!=goal_node.x)
-      {
-        gridmap_[i][j].heuristic++;
-      }
-    }
-    for (int j=goal_node.x+1;j<=gridmap_[i].size();j++)
-    {
-      if (i!=goal_node.y && j!=goal_node.x)
-      {
-        gridmap_[i][j].heuristic++;
-      }
+      gridmap_[i][j].heuristic = std::abs((goal_node.y - i)) + std::abs((goal_node.x - j));
     }
   }
 
-  //Going down
-  for (int i=goal_node.y;i<=gridmap_.size();i--)
-  {
-    for (int j=goal_node.x;j>=0;j--)
-    {
-      if (i!=goal_node.y && j!=goal_node.x)
-      {
-        gridmap_[i][j].heuristic++;
-      }
-    }
-    for (int j=goal_node.x;j<=gridmap_[i].size();j++)
-    {
-      if (i!=goal_node.y && j!=goal_node.x)
-      {
-        gridmap_[i][j].heuristic++;
-      }
-    }
-  }
-
-  for (int i =0; i<gridmap_.size(); i++)
+  //Delete-----------------------------------------------------
+  for (int i =gridmap_.size(); i>0; i--)
   {
     for (int j=0; j<gridmap_[i].size();j++)
     {
@@ -264,6 +207,7 @@ void ASTAR::init_heuristic(Node goal_node) {
     }
      std::cout << std::endl;
   }
+  //------------------------------------------------------------
 
 
 
@@ -395,13 +339,7 @@ bool ASTAR::path_search() {
 
   // create open list
   // YOUR CODE GOES HERE
-  for (int i=0;i<gridmap_.size();i++)
-  {
-    for (int j=0;j<gridmap_[i].size();j++)
-    {
 
-    }
-  }
 
 
 
