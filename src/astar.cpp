@@ -268,7 +268,6 @@ void ASTAR::policy(Node start_node, Node goal_node)
   //Check if needs to be found == false instead---------------------------
   while (!found)
   {
-    
   }
 
   //Pseudo code
@@ -329,6 +328,28 @@ void ASTAR::smooth_path(double weight_data, double weight_smooth)
   // smooth paths
 
   // YOUR CODE GOES HERE
+  double tolerance = 0.001;
+  double smoothDelta = 1; //Set high so passes through initial loop -------------------
+  //intialise waypoint vectors
+  std::vector<Waypoint> smoothWaypoints = waypoints_;
+  std::vector<Waypoint> smoothWaypointsNew((waypoints_.size() - 2));
+  
+  while (smoothDelta > tolerance)
+  {   
+    for (int i = 1; i < waypoints_.size() - 1; i++)
+    {
+      smoothWaypointsNew.at(i).x = smoothWaypoints.at(i).x - (weight_data + 2 * weight_smooth) * smoothWaypoints.at(i).x + (weight_data * waypoints_.at(i).x) + (weight_smooth * smoothWaypoints.at(i - 1).x) + (weight_smooth * smoothWaypoints.at(i + 1).x);
+      smoothWaypointsNew.at(i).y = smoothWaypoints.at(i).y - (weight_data + 2 * weight_smooth) * smoothWaypoints.at(i).y + (weight_data * waypoints_.at(i).y) + (weight_smooth * smoothWaypoints.at(i - 1).y) + (weight_smooth * smoothWaypoints.at(i + 1).y);
+    }
+
+    smoothDelta = 0; //Reset value--------------------------------------------------
+    for (int i = 0; i<smoothWaypoints.size(); i++)
+    {
+      smoothDelta += std::pow(smoothWaypointsNew.at(i).x - smoothWaypoints.at(i).x,2) + std::pow(smoothWaypointsNew.at(i).y - smoothWaypoints.at(i).y,2);
+    }
+    //Set new as old-----------------------------------------
+    smoothWaypoints = smoothWaypointsNew;
+  }
 }
 
 // search for astar path planning
@@ -472,11 +493,11 @@ bool ASTAR::path_search()
         neighbours.push_back(right);
       }
     }
-  
+
     //check if neighbours are in openlist
-    for (auto neighbour: neighbours)
+    for (auto neighbour : neighbours)
     {
-      for (int i=0;i<openList.size();i++)
+      for (int i = 0; i < openList.size(); i++)
       {
         //If neighbour is in openList
         if (openList.at(i).x == neighbour.x && openList.at(i).y == neighbour.y)
@@ -493,8 +514,6 @@ bool ASTAR::path_search()
         }
       }
     }
-
-
 
     //Up
     //Check >= or just > -------------------------
