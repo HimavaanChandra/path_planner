@@ -260,7 +260,6 @@ void ASTAR::policy(Node start_node, Node goal_node)
     {
       if (gridmap_[current.y - 1][current.x].occupied == 0)
       {
-        //Might not need to create a new node-----------------------------------------------
         Node up;
         up.x = current.x;
         up.y = current.y - 1;
@@ -273,7 +272,6 @@ void ASTAR::policy(Node start_node, Node goal_node)
     {
       if (gridmap_[current.y + 1][current.x].occupied == 0)
       {
-        //Might not need to create a new node------------------------------------------------
         Node down;
         down.x = current.x;
         down.y = current.y + 1;
@@ -286,7 +284,6 @@ void ASTAR::policy(Node start_node, Node goal_node)
     {
       if (gridmap_[current.y][current.x - 1].occupied == 0)
       {
-        //Might not need to create a new node-----------------------------------------------
         Node left;
         left.x = current.x - 1;
         left.y = current.y;
@@ -299,7 +296,6 @@ void ASTAR::policy(Node start_node, Node goal_node)
     {
       if (gridmap_[current.y][current.x + 1].occupied == 0)
       {
-        //Might not need to create a new node------------------------------------------------------
         Node right;
         right.x = current.x;
         right.y = current.y + 1;
@@ -472,13 +468,16 @@ bool ASTAR::path_search()
   // while (Goal node not found)
   // Cost + heuristic × weight - Need to add this somewhere?----------------------------
   while (!openList.empty())
+  // while (current.x != goal_node.x || current.y != goal_node.y) //remove-------------
   {
     //At record expansion order - set current node to curent expand value----------------
     neighbours.clear();
-    //This might not work especially if openList is empty.----------
-    current = openList.at(0);
-    gridmap_[current.y][current.x].closed = 1;
-    gridmap_[current.y][current.x].expand = expand;
+
+    //Delete--------------------------------------------------------------------------------------------------------------
+    // //This might not work especially if openList is empty.----------
+    // current = openList.at(0);
+    // gridmap_[current.y][current.x].closed = 1;
+    // gridmap_[current.y][current.x].expand = expand;
 
     //Remove lowest cost node from OpenSet
     for (int i = 0; i < openList.size(); i++)
@@ -488,8 +487,14 @@ bool ASTAR::path_search()
       if (openList.at(i).cost <= current.cost)
       {
         lowestID = i;
+        current = openList.at(i);
       }
     }
+    //This might not work especially if openList is empty.----------
+    // current = openList.at(0);
+    gridmap_[current.y][current.x].closed = 1;
+    gridmap_[current.y][current.x].expand = expand;
+
     //Check that I am deleting the correct element------------------------------
     openList.erase(openList.begin() + lowestID);
 
@@ -505,7 +510,6 @@ bool ASTAR::path_search()
     {
       if (gridmap_[current.y - 1][current.x].closed == 0 && gridmap_[current.y - 1][current.x].occupied == 0)
       {
-        //Might not need to create a new node-----------------------------------------------
         Node up;
         up.x = current.x;
         up.y = current.y - 1;
@@ -519,7 +523,6 @@ bool ASTAR::path_search()
     {
       if (gridmap_[current.y + 1][current.x].closed == 0 && gridmap_[current.y + 1][current.x].occupied == 0)
       {
-        //Might not need to create a new node------------------------------------------------
         Node down;
         down.x = current.x;
         down.y = current.y + 1;
@@ -533,7 +536,6 @@ bool ASTAR::path_search()
     {
       if (gridmap_[current.y][current.x - 1].closed == 0 && gridmap_[current.y][current.x - 1].occupied == 0)
       {
-        //Might not need to create a new node-----------------------------------------------
         Node left;
         left.x = current.x - 1;
         left.y = current.y;
@@ -547,7 +549,6 @@ bool ASTAR::path_search()
     {
       if (gridmap_[current.y][current.x + 1].closed == 0 && gridmap_[current.y][current.x + 1].occupied == 0)
       {
-        //Might not need to create a new node------------------------------------------------------
         Node right;
         right.x = current.x;
         right.y = current.y + 1;
@@ -559,32 +560,45 @@ bool ASTAR::path_search()
     //check if neighbours are in openlist
     for (auto neighbour : neighbours)
     {
+
       if (openList.size() > 0)
       {
         for (int i = 0; i < openList.size(); i++)
         {
+          std::cout << "openlist size: " << openList.size() << std::endl; //------------------------------------------------------------------------------------------    
           //If neighbour is in openList
           if (openList.at(i).x == neighbour.x && openList.at(i).y == neighbour.y)
           {
+            std::cout << "Neighbour is in openList" << std::endl;
             // if (neighbour.cost < openList.at(i).cost)--------------------------------------------------------
             if ((neighbour.cost + (gridmap_.at(neighbour.y).at(neighbour.x).heuristic*lambda_)) < (openList.at(i).cost + gridmap_.at(openList.at(i).y).at(openList.at(i).x).heuristic*lambda_))
             {
               openList.at(i) = neighbour;
+              std::cout << "Replace with cheaper" << std::endl;
             }
           }
+          //Added might cause errors-----------------------------------------------------------
+          else
+          {
+            openList.push_back(neighbour);
+          }
+
           std::cout << "Expand value: " << expand << std::endl;//-------------------------------------
         }
       }
-      else
-      {
-        openList.push_back(neighbour);
-      }
+      //Original-----------------------------------------------------------------------
+      // else
+      // {
+      //   openList.push_back(neighbour);
+      //   // gridmap_[neighbour.y][neighbour.x].expand = expand; //-------------------------------------------------------
+      // }
     }
     std::cout << "Openlist size: " << openList.size() << std::endl; //////////////--------------------------------
     expand++;
-    descending_sort(openList); //Can remove-----------------------------------------------------------------------
+    // descending_sort(openList); //Can remove-----------------------------------------------------------------------
   }
   std::cout << "Done" << std::endl;//-------------------------------------------------------------------
+  // return true; //Remove-------------------------------------------------------------------------------------------
 
   cout << "\nupdating policy" << endl;
   policy(start_node, goal_node);
