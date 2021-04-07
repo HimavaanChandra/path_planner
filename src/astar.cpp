@@ -214,7 +214,6 @@ void ASTAR::init_heuristic(Node goal_node)
   // initialise heuristic value for each grid in the map
 
   // YOUR CODE GOES HERE
-  //Proper way to do it, Get x and y position and find difference -- edit comment-----------------------------
   for (int i = 0; i < gridmap_.size(); i++)
   {
     for (int j = 0; j < gridmap_.at(i).size(); j++)
@@ -222,17 +221,6 @@ void ASTAR::init_heuristic(Node goal_node)
       gridmap_.at(i).at(j).heuristic = std::abs((goal_node.y - i)) + std::abs((goal_node.x - j));
     }
   }
-
-  //Delete-----------------------------------------------------
-  for (int i = gridmap_.size(); i > 0; i--)
-  {
-    for (int j = 0; j < gridmap_.at(i).size(); j++)
-    {
-      std::cout << gridmap_.at(i).at(j).heuristic << " ";
-    }
-    std::cout << std::endl;
-  }
-  //------------------------------------------------------------
 }
 
 // generate policy
@@ -253,33 +241,100 @@ void ASTAR::policy(Node start_node, Node goal_node)
 
   // YOUR CODE GOES HERE
 
-  //Check if needs to be found == false instead---------------------------
-  // while (!found)
-  // {
+  //Might need to use the expand variable
 
-  //   optimum_policy_.push_back(current);
-  //   // if (current == start_node)
-  //   if (current.x == start_node.x && current.y == start_node.y)
-  //   {
-  //     found = true;
-  //   }
-  // }
+  //Trace back from goal to start on closed list/ simply search by following lowest expand number
+  //to get a unique list.
 
+  //Search incrementally but might be inefficient
+
+  std::vector<Node> neighbours;
+  int lowestID = 0;
+  double lowestExpand = 0; //Intialise higher
   //Check if needs to be found == false instead---------------------------
   while (!found)
   {
-  }
+    //Get Neighbours
+    //Up
+    if (current.y - 1 >= 0)
+    {
+      if (gridmap_[current.y - 1][current.x].occupied == 0)
+      {
+        //Might not need to create a new node-----------------------------------------------
+        Node up;
+        up.x = current.x;
+        up.y = current.y - 1;
+        neighbours.push_back(up);
+      }
+    }
 
-  //Pseudo code
-  // currentNode = goal node
-  // while (Start node not found)
-  // {
-  //   Add currentNode to Path;
-  //   if (currentNode is start node)
-  //   {
-  //     start node found;
-  //   }
-  // }
+    //Down
+    if (current.y + 1 <= gridmap_.size())
+    {
+      if (gridmap_[current.y + 1][current.x].occupied == 0)
+      {
+        //Might not need to create a new node------------------------------------------------
+        Node down;
+        down.x = current.x;
+        down.y = current.y + 1;
+        neighbours.push_back(down);
+      }
+    }
+
+    //Left
+    if (current.x - 1 >= 0)
+    {
+      if (gridmap_[current.y][current.x - 1].occupied == 0)
+      {
+        //Might not need to create a new node-----------------------------------------------
+        Node left;
+        left.x = current.x - 1;
+        left.y = current.y;
+        neighbours.push_back(left);
+      }
+    }
+
+    //Right
+    if (current.x - 1 <= gridmap_.at(current.y).size())
+    {
+      if (gridmap_[current.y][current.x + 1].occupied == 0)
+      {
+        //Might not need to create a new node------------------------------------------------------
+        Node right;
+        right.x = current.x;
+        right.y = current.y + 1;
+        neighbours.push_back(right);
+      }
+    }
+
+    lowestID = 0;
+    // lowestExpand = gridmap_.at(neighbours.at(0).y).at(neighbours.at(0).x).expand; //might cause an error/not needed-------------------------------
+    lowestExpand = gridmap_.at(neighbours.at(0).y).at(neighbours.at(0).x).expand;
+    //Switch current to neighbour --Hopefully this doesn't cause an error------------------
+    current = neighbours.at(0);
+    //Find lowest cost neighbour
+    for (int i = 0; i < neighbours.size(); i++)
+    {
+      // std::cout << "gridmap expand: " << gridmap_.at(neighbours.at(i).y).at(neighbours.at(i).x).expand << " lowestExpand: " << lowestExpand <<std::endl;//-------------------------------------------------------------------
+      //Doesn't get into if statement-----------------------------------------------------------------------
+      if (gridmap_.at(neighbours.at(i).y).at(neighbours.at(i).x).expand < lowestExpand)
+      {
+        lowestExpand = gridmap_.at(neighbours.at(i).y).at(neighbours.at(i).x).expand;
+        lowestID = i;
+        std::cout << "Yeet " << lowestID << " " << lowestExpand <<std::endl;//-------------------------------------------------------------------
+      }
+    }
+    //Switch current to lowest cost neighbour---------------------------
+    current = neighbours.at(lowestID);
+    optimum_policy_.push_back(current);
+    //Can also try if current == start_node---------------------------------------------
+    std::cout << "currentx: " << current.x << " startx: "  << start_node.x <<" currenty: " << current.y << " starty: " << start_node.y << std::endl;
+    if (current.x == start_node.x && current.y == start_node.y)
+    {
+      found = true;
+      std::cout << "Found" << std::endl;//---------------------------------------------------------------
+    }
+  }
 }
 
 // update waypoints
@@ -323,32 +378,34 @@ void ASTAR::update_waypoints(double *robot_pose)
 // smooth generated path
 void ASTAR::smooth_path(double weight_data, double weight_smooth)
 {
-  double tolerance = 0.00001;
+  double tolerance = 0.001;
 
   // smooth paths
 
   // YOUR CODE GOES HERE
-  double tolerance = 0.001;
-  double smoothDelta = 1; //Set high so passes through initial loop -------------------
+  double smoothDelta = 0.01; //Set higher than tolerance so passes through initial loop
   //intialise waypoint vectors
   std::vector<Waypoint> smoothWaypoints = waypoints_;
-  std::vector<Waypoint> smoothWaypointsNew((waypoints_.size() - 2));
-  
+  std::vector<Waypoint> smoothWaypointsNew((waypoints_.size() - 2)); //Might be an error here -2 --------------
+
   while (smoothDelta > tolerance)
-  {   
+  {
     for (int i = 1; i < waypoints_.size() - 1; i++)
     {
-      smoothWaypointsNew.at(i).x = smoothWaypoints.at(i).x - (weight_data + 2 * weight_smooth) * smoothWaypoints.at(i).x + (weight_data * waypoints_.at(i).x) + (weight_smooth * smoothWaypoints.at(i - 1).x) + (weight_smooth * smoothWaypoints.at(i + 1).x);
-      smoothWaypointsNew.at(i).y = smoothWaypoints.at(i).y - (weight_data + 2 * weight_smooth) * smoothWaypoints.at(i).y + (weight_data * waypoints_.at(i).y) + (weight_smooth * smoothWaypoints.at(i - 1).y) + (weight_smooth * smoothWaypoints.at(i + 1).y);
+      smoothWaypointsNew.at(i - 1).x = smoothWaypoints.at(i).x - (weight_data + 2 * weight_smooth) * smoothWaypoints.at(i).x + (weight_data * waypoints_.at(i).x) + (weight_smooth * smoothWaypoints.at(i - 1).x) + (weight_smooth * smoothWaypoints.at(i + 1).x);
+      smoothWaypointsNew.at(i - 1).y = smoothWaypoints.at(i).y - (weight_data + 2 * weight_smooth) * smoothWaypoints.at(i).y + (weight_data * waypoints_.at(i).y) + (weight_smooth * smoothWaypoints.at(i - 1).y) + (weight_smooth * smoothWaypoints.at(i + 1).y);
+      waypoints_.at(i) = smoothWaypointsNew.at(i - 1);
     }
 
     smoothDelta = 0; //Reset value--------------------------------------------------
-    for (int i = 0; i<smoothWaypoints.size(); i++)
+    for (int i = 0; i < smoothWaypointsNew.size(); i++)
     {
-      smoothDelta += std::pow(smoothWaypointsNew.at(i).x - smoothWaypoints.at(i).x,2) + std::pow(smoothWaypointsNew.at(i).y - smoothWaypoints.at(i).y,2);
+      smoothDelta += std::pow(smoothWaypointsNew.at(i).x - smoothWaypoints.at(i).x, 2) + std::pow(smoothWaypointsNew.at(i).y - smoothWaypoints.at(i).y, 2);
     }
     //Set new as old-----------------------------------------
-    smoothWaypoints = smoothWaypointsNew;
+    //Resize then for loop
+    smoothWaypoints = smoothWaypointsNew; //Check if error here because of sizing-----------------------
+    // waypoints_ = smoothWaypoints;
   }
 }
 
@@ -405,18 +462,23 @@ bool ASTAR::path_search()
   double cost = start_node.cost;
   int lowestID = 0;
   std::vector<Node> neighbours;
+  double expand = 0;
+  //expand variable to increment---------------------------------------
 
   // auto current = openList.front();
 
   //Check if I am doing A* or Dijstra's algorithm
 
   // while (Goal node not found)
+  // Cost + heuristic × weight - Need to add this somewhere?----------------------------
   while (!openList.empty())
   {
+    //At record expansion order - set current node to curent expand value----------------
     neighbours.clear();
     //This might not work especially if openList is empty.----------
     current = openList.at(0);
     gridmap_[current.y][current.x].closed = 1;
+    gridmap_[current.y][current.x].expand = expand;
 
     //Remove lowest cost node from OpenSet
     for (int i = 0; i < openList.size(); i++)
@@ -497,157 +559,32 @@ bool ASTAR::path_search()
     //check if neighbours are in openlist
     for (auto neighbour : neighbours)
     {
-      for (int i = 0; i < openList.size(); i++)
+      if (openList.size() > 0)
       {
-        //If neighbour is in openList
-        if (openList.at(i).x == neighbour.x && openList.at(i).y == neighbour.y)
+        for (int i = 0; i < openList.size(); i++)
         {
-          if (neighbour.cost < openList.at(i).cost)
+          //If neighbour is in openList
+          if (openList.at(i).x == neighbour.x && openList.at(i).y == neighbour.y)
           {
-            openList.at(i) = neighbour;
+            // if (neighbour.cost < openList.at(i).cost)--------------------------------------------------------
+            if ((neighbour.cost + (gridmap_.at(neighbour.y).at(neighbour.x).heuristic*lambda_)) < (openList.at(i).cost + gridmap_.at(openList.at(i).y).at(openList.at(i).x).heuristic*lambda_))
+            {
+              openList.at(i) = neighbour;
+            }
           }
-        }
-        else
-        {
-          openList.push_back(neighbour);
-          //Record expansion order?--------------------------------
+          std::cout << "Expand value: " << expand << std::endl;//-------------------------------------
         }
       }
+      else
+      {
+        openList.push_back(neighbour);
+      }
     }
-
-    //Up
-    //Check >= or just > -------------------------
-    // if (current.y - 1 >= 0)
-    // {
-    //   //Change to !closed and !occupied
-    //   if (gridmap_[current.y - 1][current.x].closed == 0 && gridmap_[current.y - 1][current.x].occupied == 0)
-    //   {
-    //     //check if neighbour node is in openlist
-    //     for (int i = 0; i < openList.size(); i++)
-    //     {
-    //       //Check if refereing to openList or openSet--------------------------------
-    //       if (openList.at(i).x == current.x && openList.at(i).y == current.y - 1)
-    //       {
-    //         //Can i delete all and only do once?---------------------------------------------
-    //         //Calculate cost of neighbour node
-    //         cost = current.cost + 1;
-    //         //If cost is less then replace
-    //         if (cost < openList.at(i).cost)
-    //         {
-    //           current.y = current.y - 1;
-    //           current.cost = cost;
-    //           openlist.at(i) = current;
-
-    //         }
-    //         nodeAdd = true;
-    //       }
-    //     }
-    //     if (nodeAdd == false)
-    //     {
-    //       current.y = current.y-1;
-    //       current.cost = current.cost + 1;
-    //       openList.push_back(current);
-    //     }
-    //   }
-    // }
-    // nodeAdd = false;
-
-    // //Down
-    // if (current.y + 1 <= gridmap_.size())
-    // {
-    //   //Change to !closed and !occupied
-    //   if (gridmap_[current.y + 1][current.x].closed == 0 && gridmap_[current.y + 1][current.x].occupied == 0)
-    //   {
-    //     //check if neighbour node is in openlist
-    //     for (int i = 0; i < openList.size(); i++)
-    //     {
-    //       //Check if refereing to openList or openSet--------------------------------
-    //       if (openList.at(i).x == current.x && openList.at(i).y == current.y + 1)
-    //       {
-    //         //Calculate cost of neighbour node
-    //         cost = current.cost + 1;
-    //         //If cost is less then replace
-    //         if (cost < openList.at(i).cost)
-    //         {
-    //           current.y = current.y + 1;
-    //           current.cost = cost;
-    //           openlist.at(i) = current;
-
-    //         }
-    //       }
-    //     }
-    //   }
-    // }
-
-    // //Left
-    // if (current.x - 1 >= 0)
-    // {
-    //   //Change to !closed and !occupied
-    //   if (gridmap_[current.y][current.x - 1].closed == 0 && gridmap_[current.y][current.x - 1].occupied == 0)
-    //   {
-    //     //check if neighbour node is in openlist
-    //     for (int i = 0; i < openList.size(); i++)
-    //     {
-    //       //Check if refereing to openList or openSet--------------------------------
-    //       if (openList.at(i).x == current.x - 1 && openList.at(i).y == current.y)
-    //       {
-    //         //Calculate cost of neighbour node
-    //         cost = current.cost + 1;
-    //         //If cost is less then replace
-    //         if (cost < openList.at(i).cost)
-    //         {
-    //           current.x = current.x - 1;
-    //           current.cost = cost;
-    //           openlist.at(i) = current;
-
-    //         }
-    //       }
-    //     }
-    //   }
-    // }
-
-    // //Right
-    // if (current.x + 1 >= gridmap_.at(current.y).size())
-    // {
-    //   //Change to !closed and !occupied
-    //   if (gridmap_[current.y][current.x + 1].closed == 0 && gridmap_[current.y][current.x + 1].occupied == 0)
-    //   {
-    //     //check if neighbour node is in openlist
-    //     for (int i = 0; i < openList.size(); i++)
-    //     {
-    //       //Check if refereing to openList or openSet--------------------------------
-    //       if (openList.at(i).x == current.x + 1 && openList.at(i).y == current.y)
-    //       {
-    //         //Calculate cost of neighbour node
-    //         double cost=0;
-    //         //If cost is less then replace
-    //         if (cost < openList.at(i).cost)
-    //         {
-    //           current.x = current.x + 1;
-    //           current.cost = cost;
-    //           openlist.at(i) = current;
-
-    //         }
-    //       }
-    //     }
-    //   }
+    std::cout << "Openlist size: " << openList.size() << std::endl; //////////////--------------------------------
+    expand++;
+    descending_sort(openList); //Can remove-----------------------------------------------------------------------
   }
-
-  //Need to check map boundaries when adding neighbours
-
-  //select the lowest cost node from the open list
-
-  //Since 2 equal costs from example doesn't matter
-
-  //Check the next lowest cost node for neighbours and expand
-
-  //Check if already in list then update cost if lower
-
-  //When expanding to new node remove the node that was expanded from from list
-
-  //Change nodes being expanded from to closed, so they can be avoided
-
-  //Repeat till goal is reached
+  std::cout << "Done" << std::endl;//-------------------------------------------------------------------
 
   cout << "\nupdating policy" << endl;
   policy(start_node, goal_node);
