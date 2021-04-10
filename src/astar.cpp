@@ -313,7 +313,8 @@ void ASTAR::policy(Node start_node, Node goal_node)
       found = true;
     }
   }
-  //Need to justify this------------------------------------------------------------------------------------------------------------
+  //The optimum_policy_ vector needs to be reversed since the start node is added to the vector
+  //If in the wrong order the numbers do not change in the correct order and the path loops around wrong
   std::reverse(optimum_policy_.begin(), optimum_policy_.end());
 }
 
@@ -331,8 +332,7 @@ void ASTAR::update_waypoints(double *robot_pose)
     w.y = grid2meterY(optimum_policy_[i].y);
     waypoints_.push_back(w);
   }
-
-  smooth_path(0.5, 0.025); //Tune data-----------------------------------------------------------------------------------------------------------
+  smooth_path(0.5, 0.025);
 
   poses_.clear();
   string map_id = "/map";
@@ -374,7 +374,7 @@ void ASTAR::smooth_path(double weight_data, double weight_smooth)
     {
       smoothWaypointsNew.at(i - 1).x = smoothWaypoints.at(i).x - (weight_data + 2 * weight_smooth) * smoothWaypoints.at(i).x + (weight_data * waypoints_.at(i).x) + (weight_smooth * smoothWaypoints.at(i - 1).x) + (weight_smooth * smoothWaypoints.at(i + 1).x);
       smoothWaypointsNew.at(i - 1).y = smoothWaypoints.at(i).y - (weight_data + 2 * weight_smooth) * smoothWaypoints.at(i).y + (weight_data * waypoints_.at(i).y) + (weight_smooth * smoothWaypoints.at(i - 1).y) + (weight_smooth * smoothWaypoints.at(i + 1).y);
-      waypoints_.at(i) = smoothWaypointsNew.at(i - 1); //Change possibly--------------------------------------------------------------------------------------------------
+      waypoints_.at(i) = smoothWaypointsNew.at(i - 1);
     }
 
     smoothDelta = 0; //Reset value
