@@ -18,7 +18,7 @@
 
 
     <!-- start position and goal position -->
-    <param name="startx" type="double" value="-1.00"/>
+    <param name="startx" type="double" value="0.0"/>
     <param name="starty" type="double" value="1.50"/>
     <param name="goalx" type="double" value="2.50"/>
     <param name="goaly" type="double" value="1.50"/>
