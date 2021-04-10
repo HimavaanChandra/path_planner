@@ -240,18 +240,9 @@ void ASTAR::policy(Node start_node, Node goal_node)
   // from goal to start
 
   // YOUR CODE GOES HERE
-
-  //Might need to use the expand variable
-
-  //Trace back from goal to start on closed list/ simply search by following lowest expand number
-  //to get a unique list.
-
-  //Search incrementally but might be inefficient
-
   std::vector<Node> neighbours;
   int lowestID = 0;
-  double lowestExpand = 0; //Intialise higher
-  //Check if needs to be found == false instead---------------------------
+  double lowestExpand = 0;
   while (!found)
   {
     //Get Neighbours
@@ -304,32 +295,26 @@ void ASTAR::policy(Node start_node, Node goal_node)
     }
 
     lowestID = 0;
-    // lowestExpand = gridmap_.at(neighbours.at(0).y).at(neighbours.at(0).x).expand; //might cause an error/not needed-------------------------------
     lowestExpand = gridmap_.at(neighbours.at(0).y).at(neighbours.at(0).x).expand;
-    //Switch current to neighbour --Hopefully this doesn't cause an error------------------
-    current = neighbours.at(0);
     //Find lowest cost neighbour
     for (int i = 0; i < neighbours.size(); i++)
     {
-      // std::cout << "gridmap expand: " << gridmap_.at(neighbours.at(i).y).at(neighbours.at(i).x).expand << " lowestExpand: " << lowestExpand <<std::endl;//-------------------------------------------------------------------
-      //Doesn't get into if statement-----------------------------------------------------------------------
       if (gridmap_.at(neighbours.at(i).y).at(neighbours.at(i).x).expand < lowestExpand)
       {
         lowestExpand = gridmap_.at(neighbours.at(i).y).at(neighbours.at(i).x).expand;
         lowestID = i;
       }
     }
-    //Switch current to lowest cost neighbour---------------------------
+    //Switch current to lowest cost neighbour
     current = neighbours.at(lowestID);
     optimum_policy_.push_back(current);
-    //Can also try if current == start_node---------------------------------------------
     if (current.x == start_node.x && current.y == start_node.y)
     {
       found = true;
-      std::cout << "Found" << std::endl; //---------------------------------------------------------------
     }
   }
-  std::reverse(optimum_policy_.begin(), optimum_policy_.end()); //--------------------------------------------
+  //Need to justify this------------------------------------------------------------------------------------------------------------
+  std::reverse(optimum_policy_.begin(), optimum_policy_.end());
 }
 
 // update waypoints
@@ -347,7 +332,7 @@ void ASTAR::update_waypoints(double *robot_pose)
     waypoints_.push_back(w);
   }
 
-  smooth_path(0.5, 0.025);
+  smooth_path(0.5, 0.025); //Tune data-----------------------------------------------------------------------------------------------------------
 
   poses_.clear();
   string map_id = "/map";
@@ -379,28 +364,24 @@ void ASTAR::smooth_path(double weight_data, double weight_smooth)
 
   // YOUR CODE GOES HERE
   double smoothDelta = 0.01; //Set higher than tolerance so passes through initial loop
-  //intialise waypoint vectors
   std::vector<Waypoint> smoothWaypoints = waypoints_;
-  std::vector<Waypoint> smoothWaypointsNew((waypoints_.size() - 2)); //Might be an error here -2 --------------
+  std::vector<Waypoint> smoothWaypointsNew((waypoints_.size() - 2)); //Excluding first and last value
 
   while (smoothDelta > tolerance)
   {
+    //Excluding first and last wapoint
     for (int i = 1; i < waypoints_.size() - 1; i++)
     {
       smoothWaypointsNew.at(i - 1).x = smoothWaypoints.at(i).x - (weight_data + 2 * weight_smooth) * smoothWaypoints.at(i).x + (weight_data * waypoints_.at(i).x) + (weight_smooth * smoothWaypoints.at(i - 1).x) + (weight_smooth * smoothWaypoints.at(i + 1).x);
       smoothWaypointsNew.at(i - 1).y = smoothWaypoints.at(i).y - (weight_data + 2 * weight_smooth) * smoothWaypoints.at(i).y + (weight_data * waypoints_.at(i).y) + (weight_smooth * smoothWaypoints.at(i - 1).y) + (weight_smooth * smoothWaypoints.at(i + 1).y);
-      waypoints_.at(i) = smoothWaypointsNew.at(i - 1);
+      waypoints_.at(i) = smoothWaypointsNew.at(i - 1); //Change possibly--------------------------------------------------------------------------------------------------
     }
 
-    smoothDelta = 0; //Reset value--------------------------------------------------
+    smoothDelta = 0; //Reset value
     for (int i = 0; i < smoothWaypointsNew.size(); i++)
     {
       smoothDelta += std::pow(smoothWaypointsNew.at(i).x - smoothWaypoints.at(i + 1).x, 2) + std::pow(smoothWaypointsNew.at(i).y - smoothWaypoints.at(i + 1).y, 2);
     }
-    //Set new as old-----------------------------------------
-    //Resize then for loop
-    // smoothWaypoints = smoothWaypointsNew; //Check if error here because of sizing-----------------------
-    // waypoints_ = smoothWaypoints;
     smoothWaypoints = waypoints_;
   }
 }
@@ -436,78 +417,24 @@ bool ASTAR::path_search()
   gridmap_[start_node.y][start_node.x].closed = 1;
   gridmap_[start_node.y][start_node.x].expand = 0;
 
-  //Start position is marked as closed -- done above -delete----------
-
   // create open list
   // YOUR CODE GOES HERE
-  //Might need to include queue above or just use a vector---------------------
   std::vector<Node> openList;
-
-  //Vector of node as open list
-  //create node, assign position.
-  //Calc cost
-  //neighbour node cost = current node cost + 1
-  //Check if cheaper then replace
-
-  //Check combined cost in A* pdf
-
-  //To begin open list will only have start node
-  //Remove what is not used ----------------------------------------------------------------------
-  //Set current as start node
   Node current = start_node;
   openList.push_back(current);
-  int lowestID = 0;
   std::vector<Node> neighbours;
   double expand = 0;
-  double openListSize = 0;
-  double nodeCost = 1;
+  double nodeCost = 1; //neighbour node cost is 1 more than current cost
   bool inOpenList = false;
-  //expand variable to increment---------------------------------------
 
-  // auto current = openList.front();
-
-  //Check if I am doing A* or Dijstra's algorithm
-
-  // while (Goal node not found)
-  // Cost + heuristic × weight - Need to add this somewhere?----------------------------
-  //test if while (current != goal_node) works--------------------------------------------------------
-  while (current.x != goal_node.x || current.y != goal_node.y) //remove-------------
+  while (current.x != goal_node.x || current.y != goal_node.y)
   {
-    openList.erase(openList.end()-1);
-    neighbours.clear();
-
-    //Remove lowest cost node from OpenSet
-    // for (int i = 0; i < openList.size(); i++)
-    // {
-    //   //Check <= or just <-----------------------------------
-    //   //Instead of current cost was - just cost-------------------------------
-    //   if (openList.at(i).cost <= current.cost)
-    //   {
-    //     //Set current to cheapest cost node
-    //     lowestID = i;
-    //     current = openList.at(i);
-    //     std::cout << "lowestID: " << lowestID <<std::endl;//-----------------------------------------
-    //   }
-    // }
-    //Set current to cheapest cost node
-    // descending_sort(openList);
-    // current = openList.back();
-
-    //This might not work especially if openList is empty.----------
-    // current = openList.at(0);
+    //Remove cheapest element
+    openList.erase(openList.end() - 1);
+    //Update map values
     gridmap_.at(current.y).at(current.x).closed = 1;
     gridmap_.at(current.y).at(current.x).expand = expand;
-
-    //Check that I am deleting the correct element------------------------------
-    
-    // openList.erase(openList.begin() + openListSize);
-
-    //Can probs remove-----------------------------------------------
-    // if (current.x == goal_node.x && current.y == goal_node.y)
-    // {
-    //   //Goal found
-    //   break;
-    // }
+    neighbours.clear();
 
     //Get Neighbours
     //Up
@@ -519,7 +446,6 @@ bool ASTAR::path_search()
         up.x = current.x;
         up.y = current.y - 1;
         up.cost = nodeCost;
-        // up.cost = current.cost + 1;
         neighbours.push_back(up);
       }
     }
@@ -533,7 +459,6 @@ bool ASTAR::path_search()
         down.x = current.x;
         down.y = current.y + 1;
         down.cost = nodeCost;
-        // down.cost = current.cost +1;
         neighbours.push_back(down);
       }
     }
@@ -547,7 +472,6 @@ bool ASTAR::path_search()
         left.x = current.x - 1;
         left.y = current.y;
         left.cost = nodeCost;
-        // left.cost = current.cost + 1;
         neighbours.push_back(left);
       }
     }
@@ -561,7 +485,6 @@ bool ASTAR::path_search()
         right.x = current.x + 1;
         right.y = current.y;
         right.cost = nodeCost;
-        // right.cost = current.cost + 1;
         neighbours.push_back(right);
       }
     }
@@ -569,31 +492,21 @@ bool ASTAR::path_search()
     //check if neighbours are in openlist
     for (auto neighbour : neighbours)
     {
-      // if (openList.size() > 0)
-      // {
-        // std::cout << "Neighbour cost: " << neighbour.cost << std::endl;
       for (int i = 0; i < openList.size(); i++)
       {
-        // std::cout << "openlist size for loop: " << openList.size() << std::endl; //------------------------------------------------------------------------------------------
         //If neighbour is in openList
         if (openList.at(i).x == neighbour.x && openList.at(i).y == neighbour.y)
         {
           inOpenList = true;
-          // std::cout << "Neighbour is in openList" << std::endl;
-          // if (neighbour.cost < openList.at(i).cost)--------------------------------------------------------
-          if ( (neighbour.cost + gridmap_.at(neighbour.y).at(neighbour.x).heuristic * lambda_) < (openList.at(i).cost + gridmap_.at(openList.at(i).y).at(openList.at(i).x).heuristic * lambda_) )
+          if ((neighbour.cost + gridmap_.at(neighbour.y).at(neighbour.x).heuristic * lambda_) < (openList.at(i).cost + gridmap_.at(openList.at(i).y).at(openList.at(i).x).heuristic * lambda_))
           {
             openList.at(i) = neighbour;
-            // std::cout << "Replace with cheaper" << std::endl;
           }
         }
-        //Added might cause errors-----------------------------------------------------------
-
-        // std::cout << "Expand value: " << expand << std::endl; //-------------------------------------
       }
+
       if (!inOpenList)
       {
-        std::cout <<  "NOT OPEN LIST" << std::endl;
         openList.push_back(neighbour);
       }
     }
@@ -604,12 +517,7 @@ bool ASTAR::path_search()
     //set current to lowest cost node
     openList = descending_sort(openList);
     current = openList.back();
-    std::cout << "Current: x: " << current.x << " y: " << current.y << " Goal: x: " << goal_node.x << " y: " << goal_node.y << std::endl; //---------------
-    std::cout << "Openlist size: " << openList.size() << std::endl;  
   }
-  // std::cout << "Current x: " << current.x << " Current y: " << current.y <<std::endl;
-  // std::cout << "Goal x: " << goal_node.x << " Goal y: " << goal_node.y <<std::endl;
-  std::cout << "Done" << std::endl; //-------------------------------------------------------------------
 
   cout << "\nupdating policy" << endl;
   policy(start_node, goal_node);
